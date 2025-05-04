@@ -113,7 +113,11 @@ class SSETransport(ClientTransport):
     async def connect_session(
         self, **session_kwargs: Unpack[SessionKwargs]
     ) -> AsyncIterator[ClientSession]:
-        async with sse_client(self.url, headers=self.headers) as transport:
+        # better fix in mcp
+        from functools import partialmethod
+        import httpx
+        httpx.AsyncClient.post=partialmethod(httpx.AsyncClient.post,timeout=httpx.Timeout(5,read=None))
+        async with sse_client(self.url, headers=self.headers, sse_read_timeout=None) as transport:
             read_stream, write_stream = transport
             async with ClientSession(
                 read_stream, write_stream, **session_kwargs
